@@ -30,6 +30,9 @@ _Avoid_: report, overview comment, recap.
 A line that is part of the PR's diff and is therefore eligible to carry a Finding. A finding that does not land on a changed line is discarded, never posted.
 _Avoid_: diff line, touched line, hunk line.
 
+**Fingerprint**:
+A content-derived key (path + Category + a normalized hash of the offending code) used to recognize that a Finding on a re-run is the same one already posted, even if its line number has shifted. _Avoid_: hash, key, id.
+
 ### Evaluation
 
 **Eval set**:
