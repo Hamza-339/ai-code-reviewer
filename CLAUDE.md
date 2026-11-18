@@ -1,3 +1,7 @@
+## Architecture
+
+The review pipeline's stages and file locations are listed in `docs/architecture.md`. Read it before changing or extending `runReview`.
+
 ## Agent skills
 
 ### Issue tracker
