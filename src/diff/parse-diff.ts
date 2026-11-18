@@ -4,6 +4,13 @@ export interface ParsedDiffFile {
   rendered: string;
 }
 
+/** The code on one new-file line of a parsed file's rendered hunks, stripped of the line number and marker. */
+export function getCodeAtLine(file: ParsedDiffFile, line: number): string {
+  const prefix = `${line}\t`;
+  const renderedLine = file.rendered.split('\n').find((l) => l.startsWith(prefix));
+  return renderedLine ? renderedLine.slice(prefix.length + 1) : '';
+}
+
 const HUNK_HEADER = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
 
 function stripPrefix(path: string): string {
