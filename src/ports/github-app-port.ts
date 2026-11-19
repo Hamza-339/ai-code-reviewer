@@ -1,6 +1,6 @@
 import { Octokit } from '@octokit/rest';
 import { createAppAuth } from '@octokit/auth-app';
-import type { GitHubPort, OwnComment, ReviewSubmission } from './github-port';
+import type { GitHubPort, OwnComment, PullRequestTarget, ReviewSubmission } from './github-port';
 
 interface GitHubReviewComment {
   id: number;
@@ -47,13 +47,7 @@ export interface GitHubClient {
 
 const SUMMARY_MARKER = '<!-- ai-reviewer -->';
 
-export interface GitHubAppPullTarget {
-  owner: string;
-  repo: string;
-  pullNumber: number;
-}
-
-export interface GitHubAppGitHubPortTarget extends GitHubAppPullTarget {
+export interface GitHubAppGitHubPortTarget extends PullRequestTarget {
   appSlug: string;
 }
 
@@ -154,7 +148,7 @@ function toGitHubClient(octokit: Octokit): GitHubClient {
   };
 }
 
-export function createGitHubAppPort(target: GitHubAppPullTarget): GitHubAppGitHubPort {
+export function createGitHubAppPort(target: PullRequestTarget): GitHubAppGitHubPort {
   const credentials = readGitHubAppCredentials();
   const octokit = new Octokit({
     authStrategy: createAppAuth,

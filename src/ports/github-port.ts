@@ -1,5 +1,11 @@
 export type ReviewEvent = 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT';
 
+export interface PullRequestTarget {
+  owner: string;
+  repo: string;
+  pullNumber: number;
+}
+
 export interface InlineComment {
   path: string;
   /** Line number in the new (post-diff) version of the file. */
