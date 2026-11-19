@@ -21,3 +21,15 @@ Domain types (`Finding`, `Verdict`) live in `src/domain/finding.ts`; ports and t
 `src/eval/` replays the Eval set (`src/eval/fixtures.ts`) through the same `runReview` seam, with the live `ModelPort` and an in-memory `GitHubPort`, and scores the result (recall, precision, false-alarm count — see `GLOSSARY.md`). It runs via `npm run eval` against the built output, from `.github/workflows/eval.yml` (manual dispatch / nightly), and never from the gating CI suite (ADR-0006).
 
 `RecordingModelPort` (`src/eval/recording-model-port.ts`) wraps a `ModelPort` to recover each posted `Finding`'s Category and Severity for scoring, since `GitHubPort.postReview` only carries path/line/body.
+
+# Deployment
+
+The app is wired into a request/response cycle in this chain, outside-in:
+
+1. **Serverless entry** — `api/index.ts` (Vercel function, routed to by `vercel.json`'s rewrite)
+2. **Nest bootstrap** — `createApp` (`src/bootstrap.ts`): builds the Nest app on an Express server, capturing the raw request body for signature verification before Nest's own body parser would otherwise discard it
+3. **DI wiring** — `AppModule` (`src/app.module.ts`): binds `WebhookController` to the production `ReviewTrigger` and reads `GITHUB_WEBHOOK_SECRET`
+4. **Webhook handling** — `WebhookController` (`src/webhook/webhook.controller.ts`): verifies the signature, acks, and calls `ReviewTrigger.trigger()`
+5. **Background review** — `VercelReviewTrigger` (`src/webhook/vercel-review-trigger.ts`): constructs the production ports and runs `runReview` via Vercel's `waitUntil` (see ADR-0002, and the fire-and-forget rule in `CODING_STANDARDS.md`)
+
+`src/main.ts` is the same chain minus step 1, run as a long-lived Express server for local dev (`npm start`).
