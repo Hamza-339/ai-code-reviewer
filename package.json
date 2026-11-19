@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/Hamza-339/ai-code-reviewer#readme",
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.10.0",
     "@nestjs/common": "^11.2.11",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"

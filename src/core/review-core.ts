@@ -39,7 +39,7 @@ export async function runReview(
     shouldReview({ path: file.path, patch: file.rendered }),
   );
 
-  const { files: diffFiles, truncated } = selectWithinBudget(
+  const { files: diffFiles, truncated } = await selectWithinBudget(
     reviewableFiles,
     (file) => file.rendered,
     (text) => model.countTokens(text),

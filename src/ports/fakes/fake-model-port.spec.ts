@@ -45,10 +45,10 @@ describe('FakeModelPort', () => {
   });
 
   describe('countTokens', () => {
-    it('returns the configured counter result for the given text', () => {
+    it('returns the configured counter result for the given text', async () => {
       const port = new FakeModelPort([], (text) => text.length);
 
-      expect(port.countTokens('abcde')).toBe(5);
+      await expect(port.countTokens('abcde')).resolves.toBe(5);
     });
   });
 });
