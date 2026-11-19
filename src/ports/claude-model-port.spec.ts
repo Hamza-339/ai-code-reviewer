@@ -123,6 +123,23 @@ describe('ClaudeModelPort', () => {
 
       expect(findings).toEqual([]);
     });
+
+    it('throws a descriptive error when the response text is not valid JSON', async () => {
+      const create = createMock({
+        content: [{ type: 'text', text: 'not json' }],
+        stop_reason: 'max_tokens',
+      } as unknown as Anthropic.Message);
+      const port = new ClaudeModelPort(fakeClient({ create }));
+
+      await expect(port.review('rendered diff')).rejects.toThrow(/max_tokens/);
+    });
+
+    it('throws a descriptive error when the parsed JSON has no findings array', async () => {
+      const create = createMock(textResponse({ notFindings: [] }));
+      const port = new ClaudeModelPort(fakeClient({ create }));
+
+      await expect(port.review('rendered diff')).rejects.toThrow(/findings/);
+    });
   });
 
   describe('countTokens', () => {
@@ -135,10 +152,27 @@ describe('ClaudeModelPort', () => {
       const count = await port.countTokens('some diff text');
 
       expect(count).toBe(42);
-      expect(countTokens).toHaveBeenCalledWith({
-        model: SONNET_ESCALATION_MODEL,
-        messages: [{ role: 'user', content: 'some diff text' }],
+      const params = countTokens.mock.calls[0]?.[0];
+      expect(params?.model).toBe(SONNET_ESCALATION_MODEL);
+      expect(typeof params?.system).toBe('string');
+      expect(params?.output_config).toEqual({
+        format: { type: 'json_schema', schema: findingsResponseSchema },
       });
+      expect(params?.messages).toEqual([{ role: 'user', content: 'some diff text' }]);
+    });
+
+    it('counts the same system prompt and output schema that review() sends', async () => {
+      const create = createMock(textResponse({ findings: [] }));
+      const countTokens = countTokensMock(10);
+      const port = new ClaudeModelPort(fakeClient({ create, countTokens }));
+
+      await port.review('rendered diff');
+      await port.countTokens('rendered diff');
+
+      const reviewParams = firstCallParams(create);
+      const countParams = countTokens.mock.calls[0]?.[0];
+      expect(countParams?.system).toBe(reviewParams.system);
+      expect(countParams?.output_config).toEqual(reviewParams.output_config);
     });
   });
 });
