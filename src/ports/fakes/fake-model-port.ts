@@ -15,7 +15,7 @@ export class FakeModelPort implements ModelPort {
     return Promise.resolve(response);
   }
 
-  countTokens(text: string): number {
-    return this.tokenCounter(text);
+  countTokens(text: string): Promise<number> {
+    return Promise.resolve(this.tokenCounter(text));
   }
 }
