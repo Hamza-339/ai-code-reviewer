@@ -25,6 +25,10 @@ export interface ClaudeModelPortConfig {
   model?: string;
 }
 
+const OUTPUT_CONFIG: Anthropic.OutputConfig = {
+  format: { type: 'json_schema', schema: findingsResponseSchema },
+};
+
 export class ClaudeModelPort implements ModelPort {
   private readonly model: string;
 
@@ -40,9 +44,7 @@ export class ClaudeModelPort implements ModelPort {
       model: this.model,
       max_tokens: MAX_OUTPUT_TOKENS,
       system: SYSTEM_PROMPT,
-      output_config: {
-        format: { type: 'json_schema', schema: findingsResponseSchema },
-      },
+      output_config: OUTPUT_CONFIG,
       messages: [{ role: 'user', content: renderedDiff }],
     });
 
@@ -50,8 +52,12 @@ export class ClaudeModelPort implements ModelPort {
   }
 
   async countTokens(text: string): Promise<number> {
+    // Mirror review()'s system prompt and output schema so the count reflects
+    // the same input tokens the budget stage is trying to stay under.
     const result = await this.client.messages.countTokens({
       model: this.model,
+      system: SYSTEM_PROMPT,
+      output_config: OUTPUT_CONFIG,
       messages: [{ role: 'user', content: text }],
     });
     return result.input_tokens;
@@ -73,6 +79,24 @@ function parseFindings(response: Anthropic.Message): Finding[] {
   if (!textBlock) {
     return [];
   }
-  const parsed = JSON.parse(textBlock.text) as { findings: Finding[] };
-  return parsed.findings;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(textBlock.text);
+  } catch (error) {
+    throw new Error(
+      `Claude response was not valid JSON (stop_reason: ${response.stop_reason ?? 'unknown'})`,
+      { cause: error },
+    );
+  }
+
+  if (
+    typeof parsed !== 'object' ||
+    parsed === null ||
+    !Array.isArray((parsed as { findings?: unknown }).findings)
+  ) {
+    throw new Error(`Claude response did not match the expected findings[] shape`);
+  }
+
+  return (parsed as { findings: Finding[] }).findings;
 }
