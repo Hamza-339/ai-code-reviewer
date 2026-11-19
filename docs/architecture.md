@@ -15,3 +15,9 @@
 `getCodeAtLine` (`src/diff/parse-diff.ts`) is the only accessor for a `ParsedDiffFile`'s code-at-line; see `CODING_STANDARDS.md`.
 
 Domain types (`Finding`, `Verdict`) live in `src/domain/finding.ts`; ports and their in-memory fakes live in `src/ports/` and `src/ports/fakes/`.
+
+# Eval harness
+
+`src/eval/` replays the Eval set (`src/eval/fixtures.ts`) through the same `runReview` seam, with the live `ModelPort` and an in-memory `GitHubPort`, and scores the result (recall, precision, false-alarm count — see `GLOSSARY.md`). It runs via `npm run eval` against the built output, from `.github/workflows/eval.yml` (manual dispatch / nightly), and never from the gating CI suite (ADR-0006).
+
+`RecordingModelPort` (`src/eval/recording-model-port.ts`) wraps a `ModelPort` to recover each posted `Finding`'s Category and Severity for scoring, since `GitHubPort.postReview` only carries path/line/body.

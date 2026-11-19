@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint \"src/**/*.ts\"",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eval": "node dist/eval/run-eval.js"
   },
   "repository": {
     "type": "git",
