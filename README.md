@@ -24,7 +24,9 @@ See `docs/adr/` for the full set of decisions and `docs/architecture.md` for the
 
 A real review comment this app posted:
 
-> **Possible bug**: `outputDirectory` is not a valid key in `vercel.json` and will be silently ignored.
+> The 'outputDirectory' field is not a standard Vercel configuration option in vercel.json. Vercel uses buildOutput or other fields for build configuration. This key may be ignored and could indicate a configuration mistake.
+
+![Review comment posted by the app](docs/review-comment.png)
 
 This was a false alarm — `outputDirectory` is in fact a valid `vercel.json` key. It's left in here on purpose: measuring and reducing false alarms like this one is exactly what the eval harness below is for, not something to hide.
 
