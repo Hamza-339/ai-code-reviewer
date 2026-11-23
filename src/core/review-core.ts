@@ -16,6 +16,13 @@ const VERDICT_TO_EVENT: Record<Verdict, ReviewEvent> = {
 
 const FINGERPRINT_MARKER = /<!-- fingerprint: (\S+) -->/;
 
+// file.rendered carries no path (see getCodeAtLine), so the model has no way to
+// know a finding's real path unless we prefix it here — used for both token
+// counting and the prompt itself, so the budget reflects what's actually sent.
+function renderForModel(file: { path: string; rendered: string }): string {
+  return `File: ${file.path}\n${file.rendered}`;
+}
+
 function embedFingerprint(body: string, fingerprint: string): string {
   return `${body}\n\n<!-- fingerprint: ${fingerprint} -->`;
 }
@@ -41,13 +48,13 @@ export async function runReview(
 
   const { files: diffFiles, truncated } = await selectWithinBudget(
     reviewableFiles,
-    (file) => file.rendered,
+    renderForModel,
     (text) => model.countTokens(text),
     options.tokenBudget ?? DEFAULT_TOKEN_BUDGET,
   );
   const filesByPath = new Map(diffFiles.map((file) => [file.path, file]));
 
-  const renderedDiff = diffFiles.map((file) => file.rendered).join('\n\n');
+  const renderedDiff = diffFiles.map(renderForModel).join('\n\n');
   const rawFindings = await model.review(renderedDiff);
 
   const { findings: validFindings } = validateFindings(rawFindings, diffFiles);

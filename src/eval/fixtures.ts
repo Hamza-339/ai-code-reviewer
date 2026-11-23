@@ -54,14 +54,26 @@ export const fixtures: Fixture[] = [
     seededBugs: [{ path: 'src/auth/session.ts', line: 3, category: 'bug' }],
   },
   {
+    // Diff spans two files so a model that can't tell which path a hunk belongs
+    // to (regression test for the "File: <path>" prompt prefix) would attribute
+    // the finding to the wrong file, or to the line's own text, and get dropped
+    // by the line validator — see ADR for the path-in-prompt fix.
     name: 'security-sql-injection-via-string-interpolation',
-    diff: diffFor('src/db/users-repo.ts', 1, [
-      ' export function findUserByEmail(db: Database, email: string) {',
-      "-  return db.query('SELECT * FROM users WHERE email = ?', [email]);",
-      "+  const query = `SELECT * FROM users WHERE email = '${email}'`;",
-      '+  return db.query(query);',
-      ' }',
-    ]),
+    diff: [
+      diffFor('src/db/users-repo.ts', 1, [
+        ' export function findUserByEmail(db: Database, email: string) {',
+        "-  return db.query('SELECT * FROM users WHERE email = ?', [email]);",
+        "+  const query = `SELECT * FROM users WHERE email = '${email}'`;",
+        '+  return db.query(query);',
+        ' }',
+      ]),
+      diffFor('src/notifications/email-template.ts', 1, [
+        ' export function renderWelcomeEmail(name: string): string {',
+        "-  return `Hello ${name}`;",
+        "+  return `Hello, ${name}!`;",
+        ' }',
+      ]),
+    ].join('\n'),
     seededBugs: [{ path: 'src/db/users-repo.ts', line: 2, category: 'security' }],
   },
   {

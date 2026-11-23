@@ -12,7 +12,7 @@ export const SONNET_ESCALATION_MODEL = 'claude-sonnet-5';
 const MAX_OUTPUT_TOKENS = 8192;
 
 const SYSTEM_PROMPT =
-  'You are an automated code reviewer. Given a rendered pull request diff, report findings only on changed lines in the new file. Each finding has a path, a new-file line number, a category, a severity, an explanation, and an optional suggestion. Do not report a merge verdict.';
+  "You are an automated code reviewer. Given a rendered pull request diff, report findings only on changed lines in the new file. Each file's diff is preceded by a line of the form `File: <path>` — use that exact path, verbatim, as a finding's path; never invent or paraphrase it. Each finding has a path, a new-file line number, a category, a severity, an explanation, and an optional suggestion. Do not report a merge verdict.";
 
 export interface ClaudeMessagesClient {
   messages: {
